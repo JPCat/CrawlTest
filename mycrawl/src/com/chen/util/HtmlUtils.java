@@ -4,11 +4,10 @@ import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.htmlparser.Node;
 import org.htmlparser.NodeFilter;
@@ -17,23 +16,22 @@ import org.htmlparser.filters.AndFilter;
 import org.htmlparser.filters.HasAttributeFilter;
 import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.util.NodeList;
-import org.htmlparser.util.SimpleNodeIterator;
 
 import com.chen.config.Constant;
 
 public class HtmlUtils
 {
 	/**
-	 * 使用Parser获取网页中指定的内容
+	 * 使用Parser获取网页中指定的内容（在线）
 	 * 
 	 * @param addressUrl
 	 * @param encoding
 	 * @return
 	 */
-	public static List<String> getHtmlContentUseParser(String addressUrl,
+	public static String getHtmlContentUseParser(String addressUrl,
 			String encoding)
 	{
-		List<String> result = null;
+		String result = "";
 		if (StringUtils.isEmpty(addressUrl)) {
 			return result;
 		}
@@ -41,29 +39,15 @@ public class HtmlUtils
 			encoding = "utf-8";
 		}
 		try {
-			result = new ArrayList<String>(); 
 			Parser parser = new Parser(addressUrl);
 			parser.setEncoding(encoding);
 
-			NodeFilter otherFilter = new AndFilter(new TagNameFilter("h1"),
-					new HasAttributeFilter("style", "color: #636363;font-weight: normal;"));
-			NodeList otherList = parser.parse(otherFilter);
-			SimpleNodeIterator iterator = otherList.elements();
-			while(iterator.hasMoreNodes()){
-				Node node = iterator.nextNode();
-				result.add(node.toPlainTextString().replace("&nbsp;", ""));
-			}
+			NodeFilter nodeFilter = new AndFilter(new TagNameFilter("div"),
+					new HasAttributeFilter("class", "time"));
+			NodeList nodeList = parser.parse(nodeFilter);
+			Node node = nodeList.elementAt(0);
+			result = node.toPlainTextString();
 			parser.reset();
-			
-			NodeFilter introFilter = new AndFilter(new TagNameFilter("a"),
-					new HasAttributeFilter("class", "l_con"));
-			NodeList introList = parser.parse(introFilter);
-			iterator = introList.elements();
-			while(iterator.hasMoreNodes()){
-				Node node = iterator.nextNode();
-				result.add(node.toPlainTextString());
-			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -138,20 +122,31 @@ public class HtmlUtils
 		if (StringUtils.isEmpty(encoding)) {
 			encoding = "utf-8";
 		}
+		InputStreamReader isr = null;
+		BufferedReader br = null;
 		try {
 			URL url = new URL(addressUrl);
-			InputStreamReader isr = new InputStreamReader(url.openStream(),
-					encoding);
-			BufferedReader br = new BufferedReader(isr);
+			isr = new InputStreamReader(url.openStream(), encoding);
+			br = new BufferedReader(isr);
 			String temp = "";
 			while ((temp = br.readLine()) != null) {
 				result += temp + Constant.CRLF;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (br != null) {
+					br.close();
+				}
+				if (isr != null) {
+					isr.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return result;
-
 	}
 
 }

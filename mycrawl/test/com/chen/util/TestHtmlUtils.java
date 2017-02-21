@@ -1,8 +1,7 @@
-package com.chen.test;
+package com.chen.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 import org.junit.Test;
 
@@ -31,12 +30,10 @@ public class TestHtmlUtils
 	@Test
 	public void test3()
 	{
-		String addressUrl = "http://www.mzhu8.com/mulu/6/1.html";
+		String addressUrl = "http://news.sohu.com/20170220/n481190326.shtml";
 		String encoding = "gbk";
-		List<String> result = HtmlUtils.getHtmlContentUseParser(addressUrl, encoding);
-		for(String s:result){
-			System.out.println(s);
-		}
+		String result = HtmlUtils.getHtmlContentUseParser(addressUrl, encoding);
+		System.out.println(result);
 	}
 
 }
